@@ -67,4 +67,26 @@ describe("Dappazon", () => {
       });
     });
   });
+
+  describe("Buying", async () => {
+    let transaction;
+
+    beforeEach(async () => {
+      //list an ite
+      transaction = await dappazon
+        .connect(deployer)
+        .list(ID, NAME, CATEGORY, IMAGE, COST, RATING, STOCK);
+      await transaction.wait();
+
+      //buy an item by sending ether from the buyer to the Contract
+      transaction = await dappazon.connect(buyer).buy(ID, { value: COST });
+    });
+
+    //checking if the contract has received the sent Ether(COST)
+    it("Updates Contract Balance", async () => {
+      const result = await ethers.provider.getBalance(dappazon.address);
+      expect(result).to.equal(COST);
+      console.log(result);
+    });
+  });
 });
