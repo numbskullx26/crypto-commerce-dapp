@@ -88,5 +88,20 @@ describe("Dappazon", () => {
       expect(result).to.equal(COST);
       console.log(result);
     });
+
+    it("Update Buyer's order count", async () => {
+      const result = await dappazon.orderCount(buyer.address);
+      expect(result).to.equal(1);
+    });
+
+    it("Adds an Order", async () => {
+      const order = await dappazon.orders(buyer.address, 1);
+      expect(order.time).to.greaterThan(0);
+      expect(order.item.name).to.equal(NAME);
+    });
+
+    it("Emit Buy event", async () => {
+      expect(transaction).to.emit(dappazon, "Buy");
+    });
   });
 });
