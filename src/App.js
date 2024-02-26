@@ -16,6 +16,13 @@ function App() {
   const [account, setAccount] = useState(null);
   const [provider, setProvider] = useState(null);
   const [dappazon, setDappazon] = useState(null);
+  const [electronics, setElectronics] = useState(null);
+  const [clothing, setClothing] = useState(null);
+  const [toys, setToys] = useState(null);
+
+  const togglePop = async () => {
+    console.log("Toggle Pop trigger");
+  };
 
   const loadBlockChainData = async () => {
     //Connect to the Blockchain
@@ -34,6 +41,25 @@ function App() {
     );
 
     setDappazon(dappazon);
+
+    //Load Products
+
+    const items = [];
+    for (var i = 0; i < 9; i++) {
+      const item = await dappazon.items(i + 1);
+      items.push(item);
+    }
+
+    const electronics = await items.filter(
+      (item) => item.category === "electronics"
+    );
+    setElectronics(electronics);
+    const clothing = await items.filter((item) => item.category === "clothing");
+    setClothing(clothing);
+    const toys = await items.filter((item) => item.category === "toys");
+    setToys(toys);
+
+    console.log(items);
   };
 
   useEffect(() => {
@@ -44,6 +70,22 @@ function App() {
     <div>
       <Navigation account={account} setAccount={setAccount} />
       <h2>Welcome to Dappazon</h2>
+
+      {electronics && clothing && toys && (
+        <>
+          <Section
+            title={"Clothing & Jewelry"}
+            items={clothing}
+            togglePop={togglePop}
+          />
+          <Section
+            title={"Electronics & Gadgets"}
+            items={electronics}
+            togglePop={togglePop}
+          />
+          <Section title={"Toys & Gaming"} items={toys} togglePop={togglePop} />
+        </>
+      )}
     </div>
   );
 }
