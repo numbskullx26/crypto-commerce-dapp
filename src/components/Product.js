@@ -7,9 +7,38 @@ import Rating from "./Rating";
 import close from "../assets/close.svg";
 
 const Product = ({ item, provider, account, dappazon, togglePop }) => {
-  const buyHandler = async () => {
-    console.log("buy triggered");
+  const [order, setOrder] = useState(null);
+  const [hasBought, setHasBought] = useState(false);
+
+  const fetchDetails = async () => {
+    const events = await dappazon.queryFilter("Buy");
+    const orders = events.filter(
+      (event) =>
+        event.args.buyer === account &&
+        event.args.itemId.toString() === item.id.toString()
+    );
+
+    if (orders.length === 0) return;
+
+    const order = await dappazon.orders(account, orders[0].args.orderId);
+    setOrder(order);
   };
+
+  const buyHandler = async () => {
+    const signer = await provider.getSigner();
+
+    // Buy item...
+    let transaction = await dappazon
+      .connect(signer)
+      .buy(item.id, { value: item.cost });
+    await transaction.wait();
+
+    setHasBought(true);
+  };
+
+  useEffect(() => {
+    fetchDetails();
+  }, [hasBought]);
 
   return (
     <div className="product">
@@ -68,10 +97,26 @@ const Product = ({ item, provider, account, dappazon, togglePop }) => {
             <small>Sold by</small> Dappazon
           </p>
 
-          <button onClick={togglePop} className="product__close">
-            <img src={close} alt="Close" />
-          </button>
+          {order && (
+            <div className="product__bought">
+              Item bought on <br />
+              <strong>
+                {new Date(
+                  Number(order.time.toString() + "000")
+                ).toLocaleDateString(undefined, {
+                  weekday: "long",
+                  hour: "numeric",
+                  minute: "numeric",
+                  second: "numeric",
+                })}
+              </strong>
+            </div>
+          )}
         </div>
+
+        <button onClick={togglePop} className="product__close">
+          <img src={close} alt="Close" />
+        </button>
       </div>
     </div>
   );

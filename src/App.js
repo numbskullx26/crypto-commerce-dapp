@@ -13,67 +13,60 @@ import Dappazon from "./abis/Dappazon.json";
 import config from "./config.json";
 
 function App() {
-  const [account, setAccount] = useState(null);
   const [provider, setProvider] = useState(null);
   const [dappazon, setDappazon] = useState(null);
+
+  const [account, setAccount] = useState(null);
+
   const [electronics, setElectronics] = useState(null);
   const [clothing, setClothing] = useState(null);
   const [toys, setToys] = useState(null);
-  const [item, setItem] = useState(null);
+
+  const [item, setItem] = useState({});
   const [toggle, setToggle] = useState(false);
 
   const togglePop = (item) => {
     setItem(item);
-
     toggle ? setToggle(false) : setToggle(true);
   };
 
-  const loadBlockChainData = async () => {
-    //Connect to the Blockchain
-
+  const loadBlockchainData = async () => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     setProvider(provider);
-
     const network = await provider.getNetwork();
-    console.log(network);
 
-    ////Connect to the Smart Contracts(create JS instances)
     const dappazon = new ethers.Contract(
-      "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      config[network.chainId].dappazon.address,
       Dappazon,
       provider
     );
-
     setDappazon(dappazon);
 
-    //Load Products
-
     const items = [];
+
     for (var i = 0; i < 9; i++) {
       const item = await dappazon.items(i + 1);
       items.push(item);
     }
 
-    const electronics = await items.filter(
-      (item) => item.category === "electronics"
-    );
-    setElectronics(electronics);
-    const clothing = await items.filter((item) => item.category === "clothing");
-    setClothing(clothing);
-    const toys = await items.filter((item) => item.category === "toys");
-    setToys(toys);
+    const electronics = items.filter((item) => item.category === "electronics");
+    const clothing = items.filter((item) => item.category === "clothing");
+    const toys = items.filter((item) => item.category === "toys");
 
-    console.log(items);
+    setElectronics(electronics);
+    setClothing(clothing);
+    setToys(toys);
   };
 
   useEffect(() => {
-    loadBlockChainData();
+    loadBlockchainData();
   }, []);
 
   return (
     <div>
       <Navigation account={account} setAccount={setAccount} />
-      <h2>Welcome to Dappazon</h2>
+
+      <h2>Dappazon Best Sellers</h2>
 
       {electronics && clothing && toys && (
         <>
@@ -94,10 +87,10 @@ function App() {
       {toggle && (
         <Product
           item={item}
-          togglePop={toggle}
           provider={provider}
-          dappazon={dappazon}
           account={account}
+          dappazon={dappazon}
+          togglePop={togglePop}
         />
       )}
     </div>
